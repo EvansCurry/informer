@@ -11,12 +11,14 @@ import torch
 import torch.nn as nn
 from torch import optim
 from torch.utils.data import DataLoader
-
+from torch.utils.tensorboard import SummaryWriter
 import os
 import time
 
 import warnings
 warnings.filterwarnings('ignore')
+writer = SummaryWriter()
+
 
 class Exp_Informer(Exp_Basic):
     def __init__(self, args):
@@ -141,7 +143,7 @@ class Exp_Informer(Exp_Basic):
 
         if self.args.use_amp:
             scaler = torch.cuda.amp.GradScaler()
-
+        total_step = 0
         for epoch in range(self.args.train_epochs):
             iter_count = 0
             train_loss = []
@@ -155,6 +157,8 @@ class Exp_Informer(Exp_Basic):
                 pred, true = self._process_one_batch(
                     train_data, batch_x, batch_y, batch_x_mark, batch_y_mark)
                 loss = criterion(pred, true)
+                writer.add_scalar(tag="loss/train", scalar_value=loss,
+                                  global_step=total_step + 1)
                 train_loss.append(loss.item())
                 
                 if (i+1) % 100==0:
